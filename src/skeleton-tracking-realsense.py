@@ -10,7 +10,7 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
-def osc_client(joint_x, joint_y):
+def osc_client(xPos, yPos, zPos):
     IP = '192.168.0.11'
     PORT = 10000
 
@@ -18,9 +18,10 @@ def osc_client(joint_x, joint_y):
     client = udp_client.UDPClient(IP, PORT)
 
     # /colorに送信するメッセージを作って送信する
-    msg = OscMessageBuilder(address='/position')
-    msg.add_arg(joint_x)
-    msg.add_arg(joint_y)
+    msg = OscMessageBuilder(address='/pos')
+    msg.add_arg(xPos)
+    msg.add_arg(yPos)
+    msg.add_arg(zPos)
     m = msg.build()
 
     client.send(m)
@@ -38,8 +39,8 @@ def render_ids_3d(
     for skeleton_index in range(len(skeletons_2d)):
         skeleton_2D = skeletons_2d[skeleton_index]
         joints_2D = skeleton_2D.joints
-#         print(skeleton_2D.id)
-#         print(len(joints_2D))
+         #print(skeleton_2D.id)
+         #print(len(joints_2D))
         did_once = False
         for joint_index in range(len(joints_2D)):
             if did_once == False:
@@ -53,15 +54,7 @@ def render_ids_3d(
                     thickness,
                 )
                 did_once = True
-                
-                
-            #add osc code    
-            if skeleton_2D.confidences[0] > joint_confidence:
-                #print("y")
-                print(str(joints_2D[0].x)+",   "+str(joints_2D[0].y))
-                if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
-                    osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
-                
+            
                 
                 
             # check if the joint was detected and has valid coordinate
@@ -90,11 +83,15 @@ def render_ids_3d(
                 for x in range(low_bound_x, upper_bound_x):
                     for y in range(low_bound_y, upper_bound_y):
                         distance_in_kernel.append(depth_map.get_distance(x, y))
+                
+                # depth
                 median_distance = np.percentile(np.array(distance_in_kernel), 50)
+                # x, y
                 depth_pixel = [
                     int(joints_2D[joint_index].x),
                     int(joints_2D[joint_index].y),
                 ]
+                
                 if median_distance >= 0.3:
                     point_3d = rs.rs2_deproject_pixel_to_point(
                         depth_intrinsic, depth_pixel, median_distance
@@ -110,6 +107,17 @@ def render_ids_3d(
                         text_color,
                         thickness,
                     )
+                    
+                    
+                    # add osc code    
+                    if skeleton_2D.confidences[0] > joint_confidence:
+                        #print("y")
+                        print(str(joints_2D[0].x)+",   "+str(joints_2D[0].y)+",   "+str(median_distance))
+                        #print(str(point_3d))
+                        #print(str(median_distance))
+                        #if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
+                            #osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
+                        osc_client(joints_2D[joint_index].x, joints_2D[joint_index].y, median_distance)
 
 
 # Main content begins
@@ -140,6 +148,9 @@ if __name__ == "__main__":
         # Create window for initialisation
         window_name = "cubemos skeleton tracking with realsense D400 series"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO)
+        
+        # Change window size
+        cv2.resizeWindow(window_name, 1600, 900)
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
