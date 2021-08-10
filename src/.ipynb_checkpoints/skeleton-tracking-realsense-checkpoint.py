@@ -26,20 +26,14 @@ def osc_client(xPos, yPos, zPos):
 
     client.send(m)
 
-# def measure_distance(len, x, y):
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
 ):
-
-
     thickness = 1
     text_color = (255, 255, 255)
     rows, cols, channel = render_image.shape[:3]
     distance_kernel_size = 5
-    
-    distance_list_x = []
-    distance_list_y = []
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
@@ -114,31 +108,16 @@ def render_ids_3d(
                         thickness,
                     )
                     
-                       
+                    
+                    # add osc code    
                     if skeleton_2D.confidences[1] > joint_confidence:
-                        # add osc code
                         #print("y")
-                       #print(str(joints_2D[1].x)+",   "+str(joints_2D[1].y)+",   "+str(median_distance))
+                        print(str(joints_2D[1].x)+",   "+str(joints_2D[1].y)+",   "+str(median_distance))
                         #print(str(point_3d))
                         #print(str(median_distance))
                         #if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
                             #osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
-                        osc_client(joints_2D[1].x, joints_2D[1].y, median_distance)
-                    
-                        # distanceの格納
-                        distance_list_x.append(
-                            round(joints_2D[1].x, 2)
-                            )
-                        distance_list_y.append(
-                            round(joints_2D[1].y, 2)
-                            )
-                        
-                        distance_list_x = list(set(distance_list_x))
-                        distance_list_y = list(set(distance_list_y))
-                                              
-                                              
-                print(distance_list_x)
-                       
+                        osc_client(joints_2D[joint_index].x, joints_2D[joint_index].y, median_distance)
 
 
 # Main content begins
