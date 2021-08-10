@@ -26,7 +26,15 @@ def osc_client(xPos, yPos, zPos):
 
     client.send(m)
 
-# def measure_distance(len, x, y):
+def measure_distance(x, z):
+    
+    detected_human_length = min(len(x), len(z))
+    
+    if detected_human_length > 2:
+        for i in range(0, detected_human_length-1):
+            distance = (x[i] - x[i+1])**2 + (z[i] - z[i+1])**2
+        
+          # print(distance)
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -40,6 +48,7 @@ def render_ids_3d(
     
     distance_list_x = []
     distance_list_y = []
+    distance_list_z = []
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
@@ -132,12 +141,21 @@ def render_ids_3d(
                         distance_list_y.append(
                             round(joints_2D[1].y, 2)
                             )
-                        
+                        distance_list_z.append(
+                            round(
+                                depth_map.get_distance(
+                                    int(joints_2D[1].x), int(joints_2D[1].y)
+                                    )*100, 2
+                                )
+                            )
                         distance_list_x = list(set(distance_list_x))
                         distance_list_y = list(set(distance_list_y))
+                        distance_list_z = list(set(distance_list_z))
+                        
+                        
+    measure_distance(distance_list_x, distance_list_z)
                                               
-                                              
-                print(distance_list_x)
+    print(distance_list_z)
                        
 
 
