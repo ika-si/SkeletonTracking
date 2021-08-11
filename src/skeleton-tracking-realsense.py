@@ -30,11 +30,17 @@ def measure_distance(x, z):
     
     detected_human_length = min(len(x), len(z))
     
-    if detected_human_length > 2:
+    if detected_human_length > 1:
         for i in range(0, detected_human_length-1):
-            distance = (x[i] - x[i+1])**2 + (z[i] - z[i+1])**2
+            for j in range(i+1, detected_human_length):
+                distance = (x[i] - x[j])**2 + (z[i] - z[j])**2
         
-          # print(distance)
+                print(distance)
+            
+                if distance > 400000:
+                    print("n")
+                else:
+                    print("y")
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -154,7 +160,8 @@ def render_ids_3d(
                         
                         
     measure_distance(distance_list_x, distance_list_z)
-                                              
+    
+    print(distance_list_x)
     print(distance_list_z)
                        
 
