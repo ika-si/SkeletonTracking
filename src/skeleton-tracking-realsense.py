@@ -2,6 +2,7 @@
 from collections import namedtuple
 import util as cm
 import cv2
+import os
 import time
 import pyrealsense2 as rs
 import math
@@ -37,10 +38,10 @@ def measure_distance(x, z):
         
                 print(distance)
             
-                if distance > 400000:
-                    print("n")
-                else:
-                    print("y")
+#                if distance > 400000:
+#                    print("n")
+#                else:
+#                    print("y")
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -161,9 +162,22 @@ def render_ids_3d(
                         
     measure_distance(distance_list_x, distance_list_z)
     
-    print(distance_list_x)
-    print(distance_list_z)
-                       
+#    print(distance_list_x)
+#    print(distance_list_z)
+       
+
+def save_frame_camera_key(color_image, dir_path, basename, n, ext='jpg', delay=1):
+
+    os.makedirs(dir_path, exist_ok=True)
+    base_path = os.path.join(dir_path, basename)
+    
+    
+    key = cv2.waitKey(delay) & 0xFF
+    if key == ord('c'):
+        cv2.imwrite('{}_{}.{}'.format(base_path, n, ext), color_image)
+        n += 1
+
+    return n
 
 
 # Main content begins
@@ -196,7 +210,11 @@ if __name__ == "__main__":
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO)
         
         # Change window size
-        cv2.resizeWindow(window_name, 1600, 900)
+        #cv2.resizeWindow(window_name, 1600, 900)
+        
+        
+        # picture number
+        n = 0
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
@@ -221,6 +239,10 @@ if __name__ == "__main__":
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
             cv2.imshow(window_name, color_image)
+            
+            # save frame
+            n = save_frame_camera_key(color_image, 'data/temp', 'camera_capture', n)
+            
             if cv2.waitKey(1) == 27:
                 break
  
