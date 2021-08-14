@@ -11,8 +11,8 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
-def osc_client(xPos, yPos, zPos):
-    IP = '172.20.0.143'
+def osc_client(x, z):
+    IP = '192.168.11.15'
     PORT = 10000
 
     # UDPのクライアントを作る
@@ -20,9 +20,8 @@ def osc_client(xPos, yPos, zPos):
 
     # /colorに送信するメッセージを作って送信する
     msg = OscMessageBuilder(address='/pos')
-    msg.add_arg(xPos)
-    msg.add_arg(yPos)
-    msg.add_arg(zPos)
+    msg.add_arg(x)
+    msg.add_arg(z)
     m = msg.build()
 
     client.send(m)
@@ -36,7 +35,7 @@ def measure_distance(x, z):
             for j in range(i+1, detected_human_length):
                 distance = (x[i] - x[j])**2 + (z[i] - z[j])**2
         
-                print(distance)
+                #print(distance)
             
 #                if distance > 400000:
 #                    print("n")
@@ -139,7 +138,7 @@ def render_ids_3d(
                         #print(str(median_distance))
                         #if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
                             #osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
-                        osc_client(joints_2D[1].x, joints_2D[1].y, median_distance)
+                        #osc_client(joints_2D[1].x, joints_2D[1].y, median_distance)
                     
                         # distanceの格納
                         distance_list_x.append(
@@ -159,8 +158,9 @@ def render_ids_3d(
                         distance_list_y = list(set(distance_list_y))
                         distance_list_z = list(set(distance_list_z))
                         
-                        
-    measure_distance(distance_list_x, distance_list_z)
+#    measure_distance(distance_list_x, distance_list_z)
+    if len(distance_list_x) > 0:
+        osc_client(distance_list_x[0], distance_list_z[0])
     
 #    print(distance_list_x)
 #    print(distance_list_z)
