@@ -13,18 +13,22 @@ from pythonosc.osc_message_builder import OscMessageBuilder
 
 def osc_client(x, z):
     IP = '192.168.11.15'
-    PORT = 10000
+    
+    detected_human_length = min(len(x), len(z))
+    
+    for i in range(0, detected_human_length):
+        PORT = 10000 + i
 
-    # UDPのクライアントを作る
-    client = udp_client.UDPClient(IP, PORT)
+        # UDPのクライアントを作る
+        client = udp_client.UDPClient(IP, PORT)
 
-    # /colorに送信するメッセージを作って送信する
-    msg = OscMessageBuilder(address='/pos')
-    msg.add_arg(x)
-    msg.add_arg(z)
-    m = msg.build()
+        # メッセージを作って送信する
+        msg = OscMessageBuilder(address='/pos')
+        msg.add_arg(x[i])
+        msg.add_arg(z[i])
+        m = msg.build()
 
-    client.send(m)
+        client.send(m)
 
 def measure_distance(x, z):
     
@@ -158,9 +162,10 @@ def render_ids_3d(
                         distance_list_y = list(set(distance_list_y))
                         distance_list_z = list(set(distance_list_z))
                         
-#    measure_distance(distance_list_x, distance_list_z)
-    if len(distance_list_x) > 0:
-        osc_client(distance_list_x[0], distance_list_z[0])
+    measure_distance(distance_list_x, distance_list_z)
+    if (len(distance_list_x) > 0 and len(distance_list_z) > 0):
+        osc_client(distance_list_x, distance_list_z)
+#       print(distance_list_x[0])
     
 #    print(distance_list_x)
 #    print(distance_list_z)
