@@ -11,10 +11,10 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
-def osc_client(x, z):
-    IP = '192.168.11.15'
+def osc_client(distance_list):
+    IP = '192.168.0.11'
     
-    detected_human_length = min(len(x), len(z))
+    detected_human_length = len(distance_list);
     
     for i in range(0, detected_human_length):
         PORT = 10000 + i
@@ -24,20 +24,19 @@ def osc_client(x, z):
 
         # メッセージを作って送信する
         msg = OscMessageBuilder(address='/pos')
-        msg.add_arg(x[i])
-        msg.add_arg(z[i])
+        msg.add_arg(distance_list[i][0]);
+        msg.add_arg(distance_list[i][2]);
         m = msg.build()
 
         client.send(m)
 
-def measure_distance(x, z):
+def measure_distance(distance_list):
     
-    detected_human_length = min(len(x), len(z))
+    detected_human_length = len(distance_list);
     
-    if detected_human_length > 1:
-        for i in range(0, detected_human_length-1):
-            for j in range(i+1, detected_human_length):
-                distance = (x[i] - x[j])**2 + (z[i] - z[j])**2
+#    if detected_human_length > 1:
+#        for i in range(0, detected_human_length-1):
+#            for j in range(i+1, detected_human_length):
         
                 #print(distance)
             
@@ -54,11 +53,15 @@ def render_ids_3d(
     thickness = 1
     text_color = (255, 255, 255)
     rows, cols, channel = render_image.shape[:3]
-    distance_kernel_size = 5
+    distance_kernel_size = 10
     
-    distance_list_x = []
-    distance_list_y = []
-    distance_list_z = []
+    #人数
+    Human_Number = 5;
+    
+    distance_list = [[0 for j in range(3)] for i in range(Human_Number)];
+    pos_x = 0;
+    pos_y = 0;
+    pos_z = 0;
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
@@ -137,42 +140,38 @@ def render_ids_3d(
                     if skeleton_2D.confidences[1] > joint_confidence:
                         # add osc code
                         #print("y")
-                       #print(str(joints_2D[1].x)+",   "+str(joints_2D[1].y)+",   "+str(median_distance))
+                        #print(str(joints_2D[1].x)+",   "+str(joints_2D[1].y)+",   "+str(median_distance))
                         #print(str(point_3d))
                         #print(str(median_distance))
                         #if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
                             #osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
                         #osc_client(joints_2D[1].x, joints_2D[1].y, median_distance)
-                    
+                        
                         # distanceの格納
-                        distance_list_x.append(
-                            round(joints_2D[1].x, 2)
-                            )
-                        distance_list_y.append(
-                            round(joints_2D[1].y, 2)
-                            )
-                        distance_list_z.append(
-                            round(
+                        pos_x = round(joints_2D[1].x, 2)
+
+                        pos_y = round(joints_2D[1].y, 2)
+                        
+                        pos_z = round(
                                 depth_map.get_distance(
                                     int(joints_2D[1].x), int(joints_2D[1].y)
                                     )*100, 2
                                 )
-                            )
-                        distance_list_x = list(set(distance_list_x))
-                        distance_list_y = list(set(distance_list_y))
-                        distance_list_z = list(set(distance_list_z))
+                        distance_list[skeleton_index][0] = pos_x;
+                        distance_list[skeleton_index][1] = pos_y;
+                        distance_list[skeleton_index][2] = pos_z;
                         
-    measure_distance(distance_list_x, distance_list_z)
-    if (len(distance_list_x) > 0 and len(distance_list_z) > 0):
-        osc_client(distance_list_x, distance_list_z)
-#       print(distance_list_x[0])
+    measure_distance(distance_list);
+#    if (len(distance_list_x) > 0 and len(distance_list_z) > 0):
+    osc_client(distance_list);
+    print(distance_list);
     
 #    print(distance_list_x)
 #    print(distance_list_z)
-       
+
 
 def save_frame_camera_key(color_image, dir_path, basename, n, ext='jpg', delay=1):
-
+    
     os.makedirs(dir_path, exist_ok=True)
     base_path = os.path.join(dir_path, basename)
     

@@ -11,7 +11,7 @@ from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
 def osc_client(joint_x, joint_y):
-    IP = '192.168.0.11'
+    IP = '172.20.0.143'
     PORT = 10000
 
     # UDPのクライアントを作る
