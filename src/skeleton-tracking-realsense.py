@@ -11,8 +11,10 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
+IP = '192.168.0.11';
+
+
 def osc_client(distance_list):
-    IP = '192.168.0.11'
     
     detected_human_length = len(distance_list);
     
@@ -44,6 +46,24 @@ def measure_distance(distance_list):
 #                    print("n")
 #                else:
 #                    print("y")
+
+    diff_distance = round((distance_list[0][0] - distance_list[1][0])**2 + (distance_list[0][2] - distance_list[1][2])**2);
+    
+    print(diff_distance);
+    
+    
+    # ポート番号
+    PORT = 10100;
+
+    # UDPのクライアントを作る
+    client = udp_client.UDPClient(IP, PORT)
+
+    # メッセージを作って送信する
+    msg = OscMessageBuilder(address='/diff')
+    msg.add_arg(diff_distance);
+    m = msg.build()
+
+    client.send(m)
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -164,7 +184,7 @@ def render_ids_3d(
     measure_distance(distance_list);
 #    if (len(distance_list_x) > 0 and len(distance_list_z) > 0):
     osc_client(distance_list);
-    print(distance_list);
+#    print(distance_list);
     
 #    print(distance_list_x)
 #    print(distance_list_z)
