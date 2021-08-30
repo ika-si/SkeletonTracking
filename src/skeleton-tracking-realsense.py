@@ -11,6 +11,8 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
+camera_flag = False;
+camera_index =0;
 IP = '192.168.0.11';
 
 
@@ -47,9 +49,10 @@ def measure_distance(distance_list):
 #                else:
 #                    print("y")
 
-    diff_distance = round((distance_list[0][0] - distance_list[1][0])**2 + (distance_list[0][2] - distance_list[1][2])**2);
+    diff_distance = round((distance_list[0][0] - distance_list[1][0])**2 + (distance_list[0][2] - distance_list[1][2])**2) / 100000;
+    diff_distance = math.exp(diff_distance);
+#    print(diff_distance);
     
-    print(diff_distance);
     
     
     # ポート番号
@@ -63,7 +66,7 @@ def measure_distance(distance_list):
     msg.add_arg(diff_distance);
     m = msg.build()
 
-    client.send(m)
+    client.send(m);
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -82,6 +85,16 @@ def render_ids_3d(
     pos_x = 0;
     pos_y = 0;
     pos_z = 0;
+    
+    #camera
+    global camera_flag, camera_index;
+    if(camera_index!= len(skeletons_2d)):
+        camera_flag = True;
+            
+    print(len(skeletons_2d));
+    print(camera_index);
+    
+    camera_index = len(skeletons_2d);
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
@@ -90,6 +103,9 @@ def render_ids_3d(
          #print(skeleton_2D.id)
          #print(len(joints_2D))
         did_once = False
+            
+            
+            
         for joint_index in range(len(joints_2D)):
             if did_once == False:
                 cv2.putText(
@@ -196,10 +212,17 @@ def save_frame_camera_key(color_image, dir_path, basename, n, ext='jpg', delay=1
     base_path = os.path.join(dir_path, basename)
     
     
-    key = cv2.waitKey(delay) & 0xFF
-    if key == ord('c'):
+#    key = cv2.waitKey(delay) & 0xFF
+#    if key == ord('c'):
+    
+    global camera_flag;
+    
+    if camera_flag == True:
         cv2.imwrite('{}_{}.{}'.format(base_path, n, ext), color_image)
         n += 1
+        print(camera_flag);
+        camera_flag = False;
+        print(camera_flag);
 
     return n
 
