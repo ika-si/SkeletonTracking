@@ -7,68 +7,9 @@ import time
 import pyrealsense2 as rs
 import math
 import numpy as np
-from scipy.special import comb
+
 from skeletontracker import skeletontracker
-from pythonosc import udp_client
-from pythonosc.osc_message_builder import OscMessageBuilder
 
-camera_flag = False;
-camera_index =0;
-IP = '172.20.0.143';
-
-
-def osc_client(distance_list):
-    
-    detected_human_length = len(distance_list);
-    
-    for i in range(0, detected_human_length):
-        PORT = 10000 + i;
-
-        # UDPのクライアントを作る
-        client = udp_client.UDPClient(IP, PORT);
-
-        # メッセージを作って送信する
-        msg = OscMessageBuilder(address='/pos');
-        msg.add_arg(distance_list[i][0]);
-        msg.add_arg(distance_list[i][2]);
-        m = msg.build();
-
-        client.send(m);
-
-def measure_distance(distance_list, Human_Number):
-    
-    # a = comb(n, r)
-    case = comb(Human_Number, 2, exact=True);
-    
-    diff_distance = [0 for i in range(case)];
-    
-    for i in range(0, Human_Number-1):
-        for j in range(i+1, Human_Number):
-            diff_distance = round((distance_list[i][0] - distance_list[j][0])**2 + (distance_list[i][2] - distance_list[j][2])**2) / 100000;
-            diff_distance = math.exp(diff_distance);
-            
-                #print(distance)
-            
-#                if distance > 400000:
-#                    print("n")
-#                else:
-#                    print("y")
-
-    
-#   print(diff_distance);
-
-    for i in range(0, case):
-        PORT = 10100 + i
-
-        # UDPのクライアントを作る
-        client = udp_client.UDPClient(IP, PORT)
-
-        # メッセージを作って送信する
-        msg = OscMessageBuilder(address='/pos')
-        msg.add_arg(diff_distance[i][0]);
-        m = msg.build()
-
-        client.send(m)
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -79,48 +20,27 @@ def render_ids_3d(
     text_color = (255, 255, 255)
     rows, cols, channel = render_image.shape[:3]
     distance_kernel_size = 10
-    
-    #人数
-    Human_Number = 5;
-    
-    distance_list = [[0 for j in range(3)] for i in range(Human_Number)];
-    pos_x = 0;
-    pos_y = 0;
-    pos_z = 0;
-    
-    #camera
-    global camera_flag, camera_index;
-    if(camera_index!= len(skeletons_2d)):
-        camera_flag = True;
-            
-    print(len(skeletons_2d));
-    print(camera_index);
-    
-    camera_index = len(skeletons_2d);
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
         skeleton_2D = skeletons_2d[skeleton_index]
         joints_2D = skeleton_2D.joints
-         #print(skeleton_2D.id)
-         #print(len(joints_2D))
+        #print(skeleton_2D.id)
+        #print(len(joints_2D))
         did_once = False
-            
-            
             
         for joint_index in range(len(joints_2D)):
             if did_once == False:
-                cv2.putText(
-                    render_image,
-                    "id: " + str(skeleton_2D.id),
-                    (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y - 30)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.55,
-                    text_color,
-                    thickness,
-                )
-                did_once = True
-            
+#                cv2.putText(
+#                    render_image,
+#                    "id: " + str(skeleton_2D.id),
+#                    (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y - 30)),
+#                    cv2.FONT_HERSHEY_SIMPLEX,
+#                    0.55,
+#                    text_color,
+#                    thickness,
+#                )
+                did_once = True    
                 
                 
             # check if the joint was detected and has valid coordinate
@@ -164,69 +84,56 @@ def render_ids_3d(
                     )
                     point_3d = np.round([float(i) for i in point_3d], 3)
                     point_str = [str(x) for x in point_3d]
-                    cv2.putText(
-                        render_image,
-                        str(point_3d),
-                        (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y)),
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        0.4,
-                        text_color,
-                        thickness,
-                    )
+#                    cv2.putText(
+#                        render_image,
+#                        str(point_3d),
+#                        (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y)),
+#                        cv2.FONT_HERSHEY_DUPLEX,
+#                        0.4,
+#                        text_color,
+#                        thickness,
+#                    )
+        # save frame
+        save_frame_camera_key(render_image, 'data/temp', 'camera_capture', skeleton_index, joints_2D)
                     
-                       
-                    if skeleton_2D.confidences[1] > joint_confidence:
-                        # add osc code
-                        #print("y")
-                        #print(str(joints_2D[1].x)+",   "+str(joints_2D[1].y)+",   "+str(median_distance))
-                        #print(str(point_3d))
-                        #print(str(median_distance))
-                        #if (int(joints_2D[0].x != -1) & int(joints_2D[0].y != -1)):
-                            #osc_client(int(joints_2D[0].x), int(joints_2D[0].y))
-                        #osc_client(joints_2D[1].x, joints_2D[1].y, median_distance)
-                        
-                        # distanceの格納
-                        pos_x = round(joints_2D[1].x, 2)
-
-                        pos_y = round(joints_2D[1].y, 2)
-                        
-                        pos_z = round(
-                                depth_map.get_distance(
-                                    int(joints_2D[1].x), int(joints_2D[1].y)
-                                    )*100, 2
-                                )
-                        distance_list[skeleton_index][0] = pos_x;
-                        distance_list[skeleton_index][1] = pos_y;
-                        distance_list[skeleton_index][2] = pos_z;
-                        
-    measure_distance(distance_list, Human_Number);
-#    if (len(distance_list_x) > 0 and len(distance_list_z) > 0):
-    osc_client(distance_list);
-#    print(distance_list);
-    
-#    print(distance_list_x)
-#    print(distance_list_z)
 
 
-def save_frame_camera_key(color_image, dir_path, basename, n, ext='jpg', delay=1):
+def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D, ext='jpg', delay=1):
     
     os.makedirs(dir_path, exist_ok=True)
     base_path = os.path.join(dir_path, basename)
     
     
-#    key = cv2.waitKey(delay) & 0xFF
-#    if key == ord('c'):
-    
-    global camera_flag;
-    
-    if camera_flag == True:
-        cv2.imwrite('{}_{}.{}'.format(base_path, n, ext), color_image)
-        n += 1
-        print(camera_flag);
-        camera_flag = False;
-        print(camera_flag);
+    key = cv2.waitKey(delay) & 0xFF
+    if key == ord('c'):
+        
+        y1 = int(joints_2D[0].y)
+        y2 = int(joints_2D[10].y)
+        x1 = int(joints_2D[4].x)
+        x2 = int(joints_2D[7].x)
+        
+        if(x1 > x2):
+            temp = x1
+            x1 = x2
+            x2 = temp
+        if(y1 > y2):
+            temp = y1
+            y1 = y2
+            y2 = y1
+        gap = 5
+        if(y1-gap >= 0):
+            y1 = y1 - 50
+        if(y2+gap <= 720):
+            y2 = y2 + 50
+            
+        if(x1-gap >= 0):
+            x1 = x1 - 50
+        if(x2+gap <= 1280):
+            x2 = x2 + 50
+            
+        save_image = color_image[y1:y2, x1:x2]
+        cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), save_image)
 
-    return n
 
 
 # Main content begins
@@ -260,10 +167,6 @@ if __name__ == "__main__":
         
         # Change window size
         #cv2.resizeWindow(window_name, 1600, 900)
-        
-        
-        # picture number
-        n = 0
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
@@ -288,9 +191,6 @@ if __name__ == "__main__":
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
             cv2.imshow(window_name, color_image)
-            
-            # save frame
-           #n = save_frame_camera_key(color_image, 'data/temp', 'camera_capture', n)
             
             if cv2.waitKey(1) == 27:
                 break
