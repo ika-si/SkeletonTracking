@@ -155,10 +155,14 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
         
         if color_image is None:
             return
-        if color_image.all():
-            print("----------------------------------")
+#        if color_image.all():
+        else:
             save_image = color_image[y1:y2, x1:x2]
-            cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), save_image)
+            try:
+                print("----------------------------------")
+                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), save_image)
+            except Exception as ex:
+                print("imwrite error")
 
 
 
@@ -212,7 +216,7 @@ if __name__ == "__main__":
 
             # render the skeletons on top of the acquired image and display it
             color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-            cm.render_result(skeletons, color_image, joint_confidence)
+#            cm.render_result(skeletons, color_image, joint_confidence)
             render_ids_3d(
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
