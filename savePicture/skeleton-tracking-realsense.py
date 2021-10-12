@@ -160,13 +160,17 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
             save_image = color_image[y1:y2, x1:x2]
             try:
                 print("----------------------------------")
-                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), save_image)
+                h, w = save_image.shape[:2]
+                height = round(h * (50 / w))
+                resize_image = cv2.resize(save_image, dsize=(50, height))
+                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
             except Exception as ex:
                 print("imwrite error")
 
 
 
 # Main content begins
+
 if __name__ == "__main__":
     try:
         # Configure depth and color streams of the intel realsense
