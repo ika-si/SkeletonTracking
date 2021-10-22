@@ -11,7 +11,7 @@ from skeletontracker import skeletontracker
 from pythonosc import udp_client
 
 from pythonosc.osc_message_builder import OscMessageBuilder
-#from Person_reID_pytorch import ReID
+from Person_reID_pytorch import ReID
 
 #最大人数
 Human_Number = 4
@@ -77,7 +77,6 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
                 cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
             except Exception as ex:
                 print("imwrite error")
-
 
 def show_color_osc(distance_list):
     
@@ -145,7 +144,7 @@ def measure_distance_osc(distance_list):
             diff_distance[0] = SOCIAL_DISTANCE
         elif distance_list[2][0] == 0 or distance_list[2][2] == 0:
             diff_distance[2] = 0
-        print(diff_distance)
+        #print(diff_distance)
         
         #TouchDesignerへ  
         for i in range(0, 3):
@@ -170,7 +169,6 @@ def measure_distance_osc(distance_list):
         print(TypeError)
         print(NameError)
  
-
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
 ):
@@ -319,7 +317,7 @@ if __name__ == "__main__":
         # Change window size
         #cv2.resizeWindow(window_name, 1600, 900)
         
-    
+        #ReID.pred_person()
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle

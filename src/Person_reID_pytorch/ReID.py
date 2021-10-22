@@ -29,6 +29,10 @@ version =  torch.__version__
 
 
 from PIL import Image
+
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 '''#transform_train_list = [
         #transforms.RandomResizedCrop(size=128, scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
         transforms.Resize((256,128), interpolation=3),
@@ -196,7 +200,9 @@ class ClassBlock(nn.Module):
             x = self.classifier(x)
             return x
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
+
+def pred_person():
     
     transform_train_list = [
         #transforms.RandomResizedCrop(size=128, scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
@@ -248,16 +254,17 @@ if __name__ == '__main__':
     
     model_pred = Net()
     device = torch.device('cpu')
-    model_pred.load_state_dict(torch.load("model/ft_ResNet50_finetuning/net_29.pth", map_location=device), strict=False)
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/ft_ResNet50_finetuning/net_29.pth', map_location=device), strict=False)
     model_pred.eval()
     imsize = 256
     loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
     
-    files = os.listdir('testData')
+    files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData')
     i = 0
+    re_id_list = []
     for file_name in files:
         print(file_name)
-        path = 'testData/' + file_name
+        path = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData/' + file_name
         image = Image.open(path)
         plt.imshow(image)
         plt.show()
@@ -295,6 +302,10 @@ if __name__ == '__main__':
         
         print()
         i += 1
+        
+        re_id_list.append(class_names[preds])
+    
+    print(re_id_list)
     
     
 def image_processing():
@@ -304,5 +315,4 @@ def image_processing():
 
 
 def re_identification(id):
-    if id == 0:
-        return 1
+    return 1
