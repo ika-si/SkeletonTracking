@@ -118,6 +118,7 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
     
     os.makedirs(dir_path, exist_ok=True)
     base_path = os.path.join(dir_path, basename)
+    print(base_path)
     
     
 #   key = cv2.waitKey(delay) & 0xFF

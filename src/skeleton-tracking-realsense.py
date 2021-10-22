@@ -9,18 +9,23 @@ import numpy as np
 from scipy.special import comb
 from skeletontracker import skeletontracker
 from pythonosc import udp_client
+
 from pythonosc.osc_message_builder import OscMessageBuilder
-import ReID
+#from Person_reID_pytorch import ReID
 
 #最大人数
-Human_Number = 3;
+Human_Number = 4
 
 IP = '192.168.0.24'
+#大学
+#IP = '172.20.61.72'
 
 capture_number = 0
 capture_flag = True
 
-real_distance_realsense_width = 280
+#real_distance_realsense_width = 250
+real_distance_realsense_width = 150
+SOCIAL_DISTANCE = 200
 
 def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D, ext='jpg', delay=1):
 
@@ -77,8 +82,9 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
 def show_color_osc(distance_list):
     
     try:
-        for i in range(0, 1):
-            PORT = 10000 + distance_list[i][3]
+        for i in range(0, Human_Number):
+#            PORT = 10000 + distance_list[i][3]
+            PORT = 10000 + i
 
             # UDPのクライアントを作る
             client = udp_client.UDPClient(IP, PORT)
@@ -95,38 +101,75 @@ def show_color_osc(distance_list):
 
 def measure_distance_osc(distance_list):
     
-    
     try:
         # case = comb(n, r)
         case = comb(Human_Number, 2, exact=True)
     
-        diff_distance = [0 for i in range(case)]
+        diff_distance = [SOCIAL_DISTANCE for j in range(case)]
         
         for i in range(0, Human_Number-1):
-            x1 = real_distance_realsense_width/1280*distance_list[i][0]
-            d1 = distance_list[i][2]
+            # x　メートル換算
+            x1 = real_distance_realsense_width/1280*(distance_list[i][0]-640)
+            #x1 = distance_list[i][0]-640
+            if distance_list[i][2]**2-x1**2  > 0:
+                d1 = (distance_list[i][2]**2-x1**2)**0.5
+            else:
+                d1 = distance_list[i][2]
             for j in range(i+1, Human_Number):
-                x2 = real_distance_realsense_width/1280*distance_list[j][0]
-                d2 = distance_list[j][2]
-                distance = round(math.sqrt((x1 - x2)**2 + (d1 - d2)**2))
-#                print(distance)
-                diff_distance.append(math.exp(distance))
+                x2 = real_distance_realsense_width/1280*(distance_list[j][0]-640)
+                #x2 = distance_list[j][0]-640
+                if distance_list[j][2]**2-x2**2 > 0:
+                    d2 = (distance_list[j][2]**2-x2**2)**0.5
+                else:
+                    d2 = distance_list[j][2]**2
+                
+                distance = ((x1 - x2)**2 + (d1 - d2)**2)**0.5
+                
+                if(type(distance) is complex):
+                    print("complex")
+                else:
+                    #diff_distance[(i+j+2)%3] = distance
+            
+                    if i==0:
+                        diff_distance[0] = min(diff_distance[0] , distance)
+                  
+                    if i == 1 or j == 1:
+                        diff_distance[1] = min(diff_distance[1], distance)
+                    
+                    if j == 2:
+                        diff_distance[2] = min(diff_distance[2], distance)
+                    
 
-
-        for i in range(0, case):
-            PORT = 10100 + i
+        #print(diff_distance)
+        if diff_distance[0] != 0 and diff_distance[1]  == 0 and diff_distance[2] == 0:
+            diff_distance[0] = SOCIAL_DISTANCE
+        elif distance_list[2][0] == 0 or distance_list[2][2] == 0:
+            diff_distance[2] = 0
+        print(diff_distance)
+        
+        #TouchDesignerへ  
+        for i in range(0, 3):
+            
+            PORT = 1100 + i
 
             # UDPのクライアントを作る
             client = udp_client.UDPClient(IP, PORT)
 
             # メッセージを作って送信する
             msg = OscMessageBuilder(address='/dis')
-            msg.add_arg(diff_distance[i]);
+            
+            msg.add_arg(diff_distance[i])
+                
             m = msg.build()
-
+             
             client.send(m)
-    except Exception:
-        pass
+                
+
+    
+    except (TypeError, NameError):
+        print(TypeError)
+        print(NameError)
+ 
 
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
@@ -138,7 +181,7 @@ def render_ids_3d(
     rows, cols, channel = render_image.shape[:3]
     distance_kernel_size = 10
     
-    distance_list = [[0 for j in range(4)] for i in range(Human_Number)];
+    distance_list = [[0 for j in range(3)] for i in range(Human_Number)]
     pos_x = 0;
     pos_y = 0;
     pos_z = 0;
@@ -165,7 +208,7 @@ def render_ids_3d(
                 )
                 did_once = True
             
-            re_id = ReID.re_identification(skeleton_index);
+#            re_id = ReID.re_identification(skeleton_index);
                 
             # check if the joint was detected and has valid coordinate
             if skeleton_2D.confidences[joint_index] > joint_confidence:
@@ -231,17 +274,16 @@ def render_ids_3d(
                                     int(joints_2D[1].x), int(joints_2D[1].y)
                                     )*100, 2
                                 )
-#                        pos_z = (pre_pos_z**2-(real_distance_realsense_width/1280*pos_x)**2)**0.5
                         
-                        print(pos_z)
+#                        print(pos_x, "       ", pos_z)
                         
                         distance_list[skeleton_index][0] = pos_x;
                         distance_list[skeleton_index][1] = pos_y;
                         distance_list[skeleton_index][2] = pos_z;
-                        distance_list[skeleton_index][3] = re_id;
+#                        distance_list[skeleton_index][3] = re_id;
                         
+    show_color_osc(distance_list)
     measure_distance_osc(distance_list)
-#    show_color_osc(distance_list);
 
 
 
