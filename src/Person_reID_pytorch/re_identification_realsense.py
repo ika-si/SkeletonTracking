@@ -140,7 +140,7 @@ class Net(nn.Module):
         
         self.ftnet.classifier = nn.Sequential()
         self.ftnet.model.fc2 = nn.Linear(1000, 500)
-        self.ftnet.model.fc3 = nn.Linear(500, 2)
+        self.ftnet.model.fc3 = nn.Linear(500, 3)
 #         self.fc1 = nn.Linear(100, 2)
         
 #    def load_ftnet_model():
@@ -200,9 +200,9 @@ class ClassBlock(nn.Module):
             x = self.classifier(x)
             return x
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
 
-def pred_person():
+#def pred_person():
     
     transform_train_list = [
         #transforms.RandomResizedCrop(size=128, scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
@@ -225,7 +225,7 @@ def pred_person():
         'val': transforms.Compose(transform_val_list),
         }
 
-    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_val/pytorch'
+    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_3ver/pytorch'
     
     #train = ''
     
@@ -254,7 +254,7 @@ def pred_person():
     
     model_pred = Net()
     device = torch.device('cpu')
-    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/ft_ResNet50_finetuning/net_29.pth', map_location=device), strict=False)
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_finetuning_3people/net_last.pth', map_location=device), strict=False)
     model_pred.eval()
     imsize = 256
     loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
@@ -314,5 +314,21 @@ def image_processing():
 
 
 
+re_id_0 = 0
+re_id_1 = 0
+re_id_2 = 0
+
 def re_identification(id):
-    return 1
+
+    global re_id_0, re_id_1, re_id_2
+    re_id_0 = 0
+    re_id_1 = 1
+    re_id_2 = 2
+
+    if id == 0:
+        return re_id_0
+    elif id == 1:
+        return re_id_1
+    elif id == 2:
+        return re_id_2
+    
