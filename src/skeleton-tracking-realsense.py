@@ -16,16 +16,16 @@ from Person_reID_pytorch import re_identification_realsense
 #最大人数
 Human_Number = 5
 
-IP = '192.168.0.24'
+#IP = '192.168.0.24'
 #大学
-#IP = '172.20.61.72'
+IP = '172.20.61.72'
 
 capture_number = 0
 capture_flag = True
 
 #real_distance_realsense_width = 450
-real_distance_realsense_width = 30
-SOCIAL_DISTANCE = 500
+real_distance_realsense_width = 200
+SOCIAL_DISTANCE = 200
 
 def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D, ext='jpg', delay=1):
 
@@ -97,8 +97,7 @@ def show_color_osc(distance_list):
     except Exception:
         pass
 
-def measure_distance_osc(distance_list):    
-    
+def measure_distance_osc(distance_list):        
     
     try:
         # case = comb(n, r)
@@ -106,8 +105,17 @@ def measure_distance_osc(distance_list):
     
         diff_distance = [SOCIAL_DISTANCE for j in range(case)]
         
-        '''
-        for i in range(0, Human_Number-1):
+        
+        
+        
+        if distance_list[2][2] == 0:
+            Detected_Human_Number = 2
+        elif distance_list[1][2] == 0:
+            Detected_Human_Number = 1
+        else:
+            Detected_Human_Number = 3
+            
+        for i in range(0, Detected_Human_Number-1):
             # x　メートル換算
             x1 = real_distance_realsense_width/1280*(distance_list[i][0]-640)
             #x1 = distance_list[i][0]-640
@@ -115,7 +123,7 @@ def measure_distance_osc(distance_list):
                 d1 = (distance_list[i][2]**2-x1**2)**0.5
             else:
                 d1 = distance_list[i][2]
-            for j in range(i+1, Human_Number):
+            for j in range(i+1, Detected_Human_Number):
                 x2 = real_distance_realsense_width/1280*(distance_list[j][0]-640)
                 #x2 = distance_list[j][0]-640
                 if distance_list[j][2]**2-x2**2 > 0:
@@ -159,7 +167,7 @@ def measure_distance_osc(distance_list):
             d1 = distance_list[i][2]
             
             if d1 > 0:
-                rad1 = math.acos(x1/d1)
+                rad1 = math.atan(d1/x1)
 
             for j in range(i+1, Detected_Human_Number):
                 x2 = real_distance_realsense_width/1280*abs(distance_list[j][0]-640)
@@ -167,7 +175,7 @@ def measure_distance_osc(distance_list):
                 d2 = distance_list[j][2]
                 
                 if d2 > 0:
-                    rad2 = math.acos(x2/d2)
+                    rad2 = math.atan(d2/x2)
                 
                 if 180-rad1-rad2 > 0 and rad1 != 0 and rad2 != 0:
                     distance = (d1**2 + d2**2 - 2*d1*d2*math.cos(180-rad1-rad2))**0.5
@@ -188,15 +196,18 @@ def measure_distance_osc(distance_list):
                         if j == 2:
                             diff_distance[2] = min(diff_distance[2], distance)
                             
-                            
+        '''
+        
         if distance_list[2][2] == 0:
             diff_distance[2] = 0
         if distance_list[1][2] == 0:
             diff_distance[1] = 0
         if distance_list[0][2] == 0:
             diff_distance[0] = 0
-
+        
+        
         print(diff_distance)
+        
         
         #TouchDesignerへ  
         for i in range(0, 3):

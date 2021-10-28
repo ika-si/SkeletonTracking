@@ -253,12 +253,15 @@ if __name__ == '__main__':
     y_err['val'] = []
     
     model_pred = Net()
-    device = torch.device('cpu')
-    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_finetuning_3people/net_last.pth', map_location=device), strict=False)
+    device = torch.device("cuda")
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_finetuning_3people/net_last.pth', map_location="cuda:0"), strict=False)
+    model_pred.to(device)
     model_pred.eval()
     imsize = 256
     loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
-    
+
+
+
     files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData')
     i = 0
     re_id_list = []
@@ -274,7 +277,7 @@ if __name__ == '__main__':
         image = loader(image)
         image = Variable(image, requires_grad=True)
         inputs = image.unsqueeze(0)
-        device = 'cpu'
+        device = 'cuda'
         inputs = inputs.to(device)
         
         # 推論結果出力
