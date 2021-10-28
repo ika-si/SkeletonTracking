@@ -27,18 +27,16 @@ capture_flag = True
 real_distance_realsense_width = 200
 SOCIAL_DISTANCE = 200
 
-def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D, ext='jpg', delay=1):
+idx = 0
 
+def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jpg'):
+    
     os.makedirs(dir_path, exist_ok=True)
     base_path = os.path.join(dir_path, basename)
-
-
-#   key = cv2.waitKey(delay) & 0xFF
-#   if key == ord('c'):
-
-    global capture_flag
-    print(capture_flag)
-    if capture_flag:
+        
+    for skeleton_index in range(len(skeletons_2d)):
+        skeleton_2D = skeletons_2d[skeleton_index]
+        joints_2D = skeleton_2D.joints
         
         y1 = int(joints_2D[0].y)
         y2 = int(joints_2D[10].y)
@@ -50,10 +48,10 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
             x1 = x2
             x2 = temp
         if(y1 > y2):
-            temp = y1
-            y1 = y2
-            y2 = y1
-            
+           temp = y1
+           y1 = y2
+           y2 = y1
+           
         gap = 30
         if(y1-gap >= 0):
             y1 = y1 - gap
@@ -65,9 +63,55 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
             x2 = x2 + gap
         
         if color_image is None:
-            return
+                return
 #        if color_image.all():
         else:
+            save_image = color_image[y1:y2, x1:x2]
+            try:
+                person_id = skeleton_2D.id
+                h, w = save_image.shape[:2]
+                height = round(h * (50 / w))
+                resize_image = cv2.resize(save_image, dsize=(50, height))
+                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
+                print("---------------- save picture ------------------")
+            except Exception as ex:
+                print("imwrite error")
+    
+    
+    
+    '''
+    key = cv2.waitKey(delay) & 0xFF
+    
+    
+    if key == ord('c'):
+       y1 = int(joints_2D[0].y)
+       y2 = int(joints_2D[10].y)
+       x1 = int(joints_2D[4].x)
+       x2 = int(joints_2D[7].x)
+    
+       if(x1 > x2):
+           temp = x1
+           x1 = x2
+           x2 = temp
+       if(y1 > y2):
+           temp = y1
+           y1 = y2
+           y2 = y1
+           
+       gap = 30
+       if(y1-gap >= 0):
+           y1 = y1 - gap
+       if(y2+gap <= 720):
+           y2 = y2 + gap
+       if(x1-gap >= 0):
+           x1 = x1 - gap
+       if(x2+gap <= 1280):
+           x2 = x2 + gap
+        
+       if color_image is None:
+            return
+#        if color_image.all():
+       else:
             save_image = color_image[y1:y2, x1:x2]
             try:
                 print("----------------------------------")
@@ -77,6 +121,7 @@ def save_frame_camera_key(color_image, dir_path, basename, person_id, joints_2D,
                 cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
             except Exception as ex:
                 print("imwrite error")
+    '''
 
 def show_color_osc(distance_list):
     
@@ -97,7 +142,7 @@ def show_color_osc(distance_list):
     except Exception:
         pass
 
-def measure_distance_osc(distance_list):        
+def measure_distance_osc(distance_list):
     
     try:
         # case = comb(n, r)
@@ -406,6 +451,12 @@ if __name__ == "__main__":
             render_ids_3d(
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
+            # save frame
+            idx += 1
+            if idx == 30:
+                #print('Ok')
+                save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
+                idx = 0
             cv2.imshow(window_name, color_image)
             
             if cv2.waitKey(1) == 27:
