@@ -199,10 +199,19 @@ class ClassBlock(nn.Module):
         else:
             x = self.classifier(x)
             return x
+        
+#if __name__ == '__main__':
+    
+    
+model_pred = 0
+class_names = 0
+loader = 0
+dict_image_id = {}
+    
 
-if __name__ == '__main__':
-
-#def pred_person():
+def model_load():
+    
+    global model_pred, class_names, loader
     
     transform_train_list = [
         #transforms.RandomResizedCrop(size=128, scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
@@ -225,7 +234,7 @@ if __name__ == '__main__':
         'val': transforms.Compose(transform_val_list),
         }
 
-    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_3ver/pytorch'
+    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_new/pytorch'
     
     #train = ''
     
@@ -254,23 +263,30 @@ if __name__ == '__main__':
     
     model_pred = Net()
     device = torch.device("cuda")
-    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_finetuning_3people/net_last.pth', map_location="cuda:0"), strict=False)
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_new/net_last.pth', map_location="cuda:0"), strict=False)
     model_pred.to(device)
     model_pred.eval()
+    
     imsize = 256
     loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
 
-
-
-    files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData')
-    i = 0
+def pred_person():
+    
+    global dict_image_id
+    
+    files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp')
+    #files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData')
+    
+    id = 0
     re_id_list = []
     for file_name in files:
         print(file_name)
-        path = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData/' + file_name
+        path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp', file_name)
+        #path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData', file_name)
+        
         image = Image.open(path)
-        plt.imshow(image)
-        plt.show()
+        #plt.imshow(image)
+        #plt.show()
         
         #画像の前処理
         image = Image.open(path).convert("RGB")
@@ -302,9 +318,17 @@ if __name__ == '__main__':
     #         msg.add_arg(2, osc_message_builder.OscMessageBuilder.ARG_TYPE_INT)
     #         msg = msg.build()
     #         client.send(msg)
+        if(class_names[preds] == '001'):
+            id = 0
+        elif(class_names[preds] == '002'):
+            id = 1
+        elif(class_names[preds] == '003'):
+            id = 2
+        
+        skeleton_id = file_name[-5]
+        dict_image_id[skeleton_id] = id
         
         print()
-        i += 1
         
         re_id_list.append(class_names[preds])
     
@@ -321,8 +345,8 @@ re_id_0 = 0
 re_id_1 = 0
 re_id_2 = 0
 
-def re_identification(id):
-
+def re_identification(skeleton_id):
+    '''
     global re_id_0, re_id_1, re_id_2
     re_id_0 = 0
     re_id_1 = 1
@@ -334,4 +358,11 @@ def re_identification(id):
         return re_id_1
     elif id == 2:
         return re_id_2
+    
+    '''
+    if dict_image_id.setdefault(str(skeleton_id)) == None:
+        return 3
+    else:
+        return dict_image_id[str(skeleton_id)]
+
     

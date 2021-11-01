@@ -96,7 +96,9 @@ def render_ids_3d(
                         text_color,
                         thickness,
                     )
-                    '''
+               '''
+
+i = 0
 
 def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jpg'):
     
@@ -109,8 +111,8 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
         
         y1 = int(joints_2D[0].y)
         y2 = int(joints_2D[10].y)
-        x1 = int(joints_2D[4].x)
-        x2 = int(joints_2D[7].x)
+        x1 = int(joints_2D[2].x)
+        x2 = int(joints_2D[5].x)
     
         if(x1 > x2):
             temp = x1
@@ -131,20 +133,27 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
         if(x2+gap <= 1280):
             x2 = x2 + gap
         
+        '''
         if color_image is None:
                 return
 #        if color_image.all():
         else:
-            save_image = color_image[y1:y2, x1:x2]
-            try:
-                person_id = skeleton_2D.id
-                h, w = save_image.shape[:2]
-                height = round(h * (50 / w))
-                resize_image = cv2.resize(save_image, dsize=(50, height))
-                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
-                print("---------------- save picture ------------------")
-            except Exception as ex:
-                print("imwrite error")
+        '''
+            
+#        key = cv2.waitKey(1) & 0xFF
+#        if key == ord('c'):
+        save_image = color_image[y1:y2, x1:x2]
+        try:
+            person_id = skeleton_2D.id
+            h, w = save_image.shape[:2]
+            height = round(h * (50 / w))
+            resize_image = cv2.resize(save_image, dsize=(50, height))
+            global i
+            cv2.imwrite('{}_{}.{}'.format(base_path, i, ext), resize_image)
+            i += 1
+            print("---------------- save picture ------------------")
+        except Exception as ex:
+            print("imwrite error")
     
     
     
@@ -245,13 +254,13 @@ if __name__ == "__main__":
 
             # render the skeletons on top of the acquired image and display it
             color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-            cm.render_result(skeletons, color_image, joint_confidence)
+#            cm.render_result(skeletons, color_image, joint_confidence)
             render_ids_3d(
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
             # save frame
             idx += 1
-            if idx == 30:
+            if idx == 10:
                 #print('Ok')
                 save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
                 idx = 0

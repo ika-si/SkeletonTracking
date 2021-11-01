@@ -23,8 +23,6 @@ IP = '172.20.61.72'
 capture_number = 0
 capture_flag = True
 
-#real_distance_realsense_width = 450
-real_distance_realsense_width = 200
 SOCIAL_DISTANCE = 200
 
 idx = 0
@@ -40,8 +38,8 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
         
         y1 = int(joints_2D[0].y)
         y2 = int(joints_2D[10].y)
-        x1 = int(joints_2D[4].x)
-        x2 = int(joints_2D[7].x)
+        x1 = int(joints_2D[2].x)
+        x2 = int(joints_2D[5].x)
     
         if(x1 > x2):
             temp = x1
@@ -127,7 +125,7 @@ def show_color_osc(distance_list):
     
     try:
         for i in range(0, Human_Number):
-            PORT = 10000 + i
+            PORT = 10000 + distance_list[i][3]
 
             # UDPのクライアントを作る
             client = udp_client.UDPClient(IP, PORT)
@@ -150,9 +148,6 @@ def measure_distance_osc(distance_list):
     
         diff_distance = [SOCIAL_DISTANCE for j in range(case)]
         
-        
-        
-        
         if distance_list[2][2] == 0:
             Detected_Human_Number = 2
         elif distance_list[1][2] == 0:
@@ -161,6 +156,11 @@ def measure_distance_osc(distance_list):
             Detected_Human_Number = 3
             
         for i in range(0, Detected_Human_Number-1):
+            '''
+            if distance_list[j][2] == 0:
+                    continue
+            '''
+            real_distance_realsense_width = 0.24 * distance_list[i][2] + 452
             # x　メートル換算
             x1 = real_distance_realsense_width/1280*(distance_list[i][0]-640)
             #x1 = distance_list[i][0]-640
@@ -168,7 +168,13 @@ def measure_distance_osc(distance_list):
                 d1 = (distance_list[i][2]**2-x1**2)**0.5
             else:
                 d1 = distance_list[i][2]
+                
             for j in range(i+1, Detected_Human_Number):
+                
+                if distance_list[j][2] == 0:
+                    continue
+                
+                real_distance_realsense_width = 0.24 * distance_list[j][2] + 452
                 x2 = real_distance_realsense_width/1280*(distance_list[j][0]-640)
                 #x2 = distance_list[j][0]-640
                 if distance_list[j][2]**2-x2**2 > 0:
@@ -254,10 +260,11 @@ def measure_distance_osc(distance_list):
         print(diff_distance)
         
         
-        #TouchDesignerへ  
+        #TouchDesignerへ
+        '''
         for i in range(0, 3):
             
-            PORT = 1100 + i
+            PORT = 1100 + distance_list[i][3]
 
             # UDPのクライアントを作る
             client = udp_client.UDPClient(IP, PORT)
@@ -270,40 +277,42 @@ def measure_distance_osc(distance_list):
             m = msg.build()
              
             client.send(m)
-                
+        '''
 
     
     except (TypeError, NameError):
         print(TypeError)
         print(NameError)
-        
-        
+              
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
 ):
 
 
-    thickness = 1
-    text_color = (255, 255, 255)
+#    thickness = 1
+#    text_color = (255, 255, 255)
     rows, cols, channel = render_image.shape[:3]
     distance_kernel_size = 10
     
-    distance_list = [[0 for j in range(3)] for i in range(Human_Number)]
-    pos_x = 0;
-    pos_y = 0;
-    pos_z = 0;
+    distance_list = [[0 for j in range(4)] for i in range(Human_Number)]
+    pos_x = 0
+    pos_y = 0
+    pos_z = 0
     
            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
         skeleton_2D = skeletons_2d[skeleton_index]
         joints_2D = skeleton_2D.joints
-        did_once = False
-            
-        re_id = re_identification_realsense.re_identification(skeleton_index);
+#        did_once = False
+        
+        
+        #re_id = re_identification_realsense.re_identification(skeleton_index)
+        re_id = re_identification_realsense.re_identification(skeleton_2D.id)
         #print(skeleton_index, "     ", re_id)
             
         for joint_index in range(len(joints_2D)):
+            '''
             if did_once == False:
                 cv2.putText(
                     render_image,
@@ -315,6 +324,7 @@ def render_ids_3d(
                     thickness,
                 )
                 did_once = True
+            '''
                 
             # check if the joint was detected and has valid coordinate
             if skeleton_2D.confidences[joint_index] > joint_confidence:
@@ -357,6 +367,7 @@ def render_ids_3d(
                     )
                     point_3d = np.round([float(i) for i in point_3d], 3)
                     point_str = [str(x) for x in point_3d]
+                    '''
                     cv2.putText(
                         render_image,
                         str(point_3d),
@@ -366,6 +377,7 @@ def render_ids_3d(
                         text_color,
                         thickness,
                     )
+                    '''
                     
                        
                     if skeleton_2D.confidences[1] > joint_confidence:
@@ -383,11 +395,15 @@ def render_ids_3d(
                         
 #                        print(pos_x, "       ", pos_z)
                         
-                        
-                        distance_list[re_id][0] = pos_x;
-                        distance_list[re_id][1] = pos_y;
-                        distance_list[re_id][2] = pos_z;
-#                        distance_list[skeleton_index][3] = re_id;
+                        '''
+                        distance_list[int(re_id)][0] = pos_x
+                        distance_list[int(re_id)][1] = pos_y
+                        distance_list[int(re_id)][2] = pos_z
+                        '''
+                        distance_list[skeleton_index][0] = pos_x
+                        distance_list[skeleton_index][1] = pos_y
+                        distance_list[skeleton_index][2] = pos_z
+                        distance_list[skeleton_index][3] = int(re_id);
                         
     show_color_osc(distance_list)
     measure_distance_osc(distance_list)
@@ -427,7 +443,7 @@ if __name__ == "__main__":
         #cv2.resizeWindow(window_name, 1600, 900)
         
         #REIDを呼び出す
-        #ReID.pred_person()
+        #re_identification_realsense.model_load()
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
@@ -453,10 +469,12 @@ if __name__ == "__main__":
             )
             # save frame
             idx += 1
-            if idx == 30:
+            if idx == 15:
                 #print('Ok')
-                save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
-                idx = 0
+                #save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
+                #re_identification_realsense.pred_person()
+                idx = 0    
+            
             cv2.imshow(window_name, color_image)
             
             if cv2.waitKey(1) == 27:
