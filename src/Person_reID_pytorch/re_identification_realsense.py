@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import time
 import os
+import cv2
 
 from torch.nn import init
 from torchvision import models
@@ -140,7 +141,7 @@ class Net(nn.Module):
         
         self.ftnet.classifier = nn.Sequential()
         self.ftnet.model.fc2 = nn.Linear(1000, 500)
-        self.ftnet.model.fc3 = nn.Linear(500, 3)
+        self.ftnet.model.fc3 = nn.Linear(500, 2)
 #         self.fc1 = nn.Linear(100, 2)
         
 #    def load_ftnet_model():
@@ -163,7 +164,6 @@ class Net(nn.Module):
         x = self.ftnet.model.fc2(x)
         x = self.ftnet.model.fc3(x)
         return x
-    
     
 class ClassBlock(nn.Module):
     def __init__(self, input_dim, class_num, droprate, relu=False, bnorm=True, num_bottleneck=512, linear=True, return_f = False):
@@ -234,7 +234,7 @@ def model_load():
         'val': transforms.Compose(transform_val_list),
         }
 
-    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_new/pytorch'
+    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_5_a_1029/pytorch'
     
     #train = ''
     
@@ -263,7 +263,7 @@ def model_load():
     
     model_pred = Net()
     device = torch.device("cuda")
-    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ft_ResNet50_new/net_last.pth', map_location="cuda:0"), strict=False)
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ResNet50_a_1029_both/net_last.pth', map_location="cuda:0"), strict=False)
     model_pred.to(device)
     model_pred.eval()
     
@@ -291,13 +291,13 @@ def pred_person():
         #画像の前処理
         image = Image.open(path).convert("RGB")
         image = loader(image)
+        image = gamma_processing(image)
         image = Variable(image, requires_grad=True)
         inputs = image.unsqueeze(0)
         device = 'cuda'
         inputs = inputs.to(device)
         
         # 推論結果出力
-    
         outputs = model_pred(inputs)  # torch.Size([1, 2])
         _, preds = torch.max(outputs.data, 1)
         print("推論値：", outputs)
@@ -319,11 +319,11 @@ def pred_person():
     #         msg = msg.build()
     #         client.send(msg)
         if(class_names[preds] == '001'):
-            id = 0
-        elif(class_names[preds] == '002'):
             id = 1
-        elif(class_names[preds] == '003'):
+        elif(class_names[preds] == '002'):
             id = 2
+        elif(class_names[preds] == '003'):
+            id = 3
         
         skeleton_id = file_name[-5]
         dict_image_id[skeleton_id] = id
@@ -335,34 +335,44 @@ def pred_person():
     print(re_id_list)
     
     
-def image_processing():
+def gamma_processing(input_image):
+    #CLAHE補正
+    img_yuv = cv2.cvtColor(input_image, cv2.COLOR_BGR2YUV)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0])
+    img_clahe = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+            
+    #両方
+    gamma_both = 2.0
+    gamma_cvt_both = np.zeros((256,1),dtype = 'uint8')
+    for i in range(256):
+        gamma_cvt_both[i][0] = 255 * (float(i)/255) ** (1.0/gamma_both)
+    img_gamma_clahe = cv2.LUT(img_clahe,gamma_cvt_both)
+
+    filter_out_b = cv2.bilateralFilter(img_gamma_clahe, 3, 1.5, 1.5)
+
+    return filter_out_b
+
+
+re_id_0 = 1
+re_id_1 = 2
+re_id_2 = 3
+
+def re_identification(skeleton_2D_id):
+    #reidがうごかないとき
+    if skeleton_2D_id == 0:
         return 1
-
-
-
-
-re_id_0 = 0
-re_id_1 = 0
-re_id_2 = 0
-
-def re_identification(skeleton_id):
-    '''
-    global re_id_0, re_id_1, re_id_2
-    re_id_0 = 0
-    re_id_1 = 1
-    re_id_2 = 2
-
-    if id == 0:
-        return re_id_0
-    elif id == 1:
-        return re_id_1
-    elif id == 2:
-        return re_id_2
+    elif skeleton_2D_id == 1:
+        return 2
+    elif skeleton_2D_id == 2:
+        return 3
+    else:
+        return 4
     
     '''
     if dict_image_id.setdefault(str(skeleton_id)) == None:
         return 3
     else:
         return dict_image_id[str(skeleton_id)]
-
+    '''
     

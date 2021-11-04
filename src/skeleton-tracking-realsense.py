@@ -67,68 +67,24 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
             save_image = color_image[y1:y2, x1:x2]
             try:
                 person_id = skeleton_2D.id
+                
                 h, w = save_image.shape[:2]
                 height = round(h * (50 / w))
                 resize_image = cv2.resize(save_image, dsize=(50, height))
+            
                 cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
                 print("---------------- save picture ------------------")
             except Exception as ex:
                 print("imwrite error")
-    
-    
-    
-    '''
-    key = cv2.waitKey(delay) & 0xFF
-    
-    
-    if key == ord('c'):
-       y1 = int(joints_2D[0].y)
-       y2 = int(joints_2D[10].y)
-       x1 = int(joints_2D[4].x)
-       x2 = int(joints_2D[7].x)
-    
-       if(x1 > x2):
-           temp = x1
-           x1 = x2
-           x2 = temp
-       if(y1 > y2):
-           temp = y1
-           y1 = y2
-           y2 = y1
-           
-       gap = 30
-       if(y1-gap >= 0):
-           y1 = y1 - gap
-       if(y2+gap <= 720):
-           y2 = y2 + gap
-       if(x1-gap >= 0):
-           x1 = x1 - gap
-       if(x2+gap <= 1280):
-           x2 = x2 + gap
-        
-       if color_image is None:
-            return
-#        if color_image.all():
-       else:
-            save_image = color_image[y1:y2, x1:x2]
-            try:
-                print("----------------------------------")
-                h, w = save_image.shape[:2]
-                height = round(h * (50 / w))
-                resize_image = cv2.resize(save_image, dsize=(50, height))
-                cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
-            except Exception as ex:
-                print("imwrite error")
-    '''
 
 def show_color_osc(distance_list):
     
     try:
         for i in range(0, Human_Number):
-            PORT = 10000 + distance_list[i][3]
+            PORT_COLOR = 10000 + distance_list[i][3]
 
             # UDPのクライアントを作る
-            client = udp_client.UDPClient(IP, PORT)
+            client = udp_client.UDPClient(IP, PORT_COLOR)
 
             # メッセージを作って送信する
             msg = OscMessageBuilder(address='/pos')
@@ -147,7 +103,7 @@ def measure_distance_osc(distance_list):
         case = comb(Human_Number, 2, exact=True)
     
         diff_distance = [SOCIAL_DISTANCE for j in range(case)]
-        
+
         if distance_list[2][2] == 0:
             Detected_Human_Number = 2
         elif distance_list[1][2] == 0:
@@ -156,31 +112,27 @@ def measure_distance_osc(distance_list):
             Detected_Human_Number = 3
             
         for i in range(0, Detected_Human_Number-1):
-            '''
-            if distance_list[j][2] == 0:
+            
+            if distance_list[i][2] == 0:
                     continue
-            '''
+            
             real_distance_realsense_width = 0.24 * distance_list[i][2] + 452
             # x　メートル換算
             x1 = real_distance_realsense_width/1280*(distance_list[i][0]-640)
             #x1 = distance_list[i][0]-640
-            if distance_list[i][2]**2-x1**2 > 0:
-                d1 = (distance_list[i][2]**2-x1**2)**0.5
-            else:
-                d1 = distance_list[i][2]
-                
+            
+            d1 = distance_list[i][2]
+            
             for j in range(i+1, Detected_Human_Number):
                 
                 if distance_list[j][2] == 0:
                     continue
                 
-                real_distance_realsense_width = 0.24 * distance_list[j][2] + 452
+#                real_distance_realsense_width = 0.24 * distance_list[j][2] + 452
                 x2 = real_distance_realsense_width/1280*(distance_list[j][0]-640)
                 #x2 = distance_list[j][0]-640
-                if distance_list[j][2]**2-x2**2 > 0:
-                    d2 = (distance_list[j][2]**2-x2**2)**0.5
-                else:
-                    d2 = distance_list[j][2]
+                
+                d2 = distance_list[j][2]
                 
                 distance = ((x1 - x2)**2 + (d1 - d2)**2)**0.5
                 
@@ -197,75 +149,21 @@ def measure_distance_osc(distance_list):
                     
                     if j == 2:
                         diff_distance[2] = min(diff_distance[2], distance)
-                    
-        '''
-        
-        rad1 = 0
-        rad2 = 0
-        
-        if distance_list[2][2] == 0:
-            Detected_Human_Number = 2
-        elif distance_list[1][2] == 0:
-            Detected_Human_Number = 1
-        else:
-            Detected_Human_Number = 3
-        
-        #余弦定理
-        for i in range(0, Detected_Human_Number-1):
-            # x　メートル換算
-            x1 = real_distance_realsense_width/1280*abs(distance_list[i][0]-640)
-            #x1 = distance_list[i][0]-640
-            d1 = distance_list[i][2]
-            
-            if d1 > 0:
-                rad1 = math.atan(d1/x1)
-
-            for j in range(i+1, Detected_Human_Number):
-                x2 = real_distance_realsense_width/1280*abs(distance_list[j][0]-640)
-                #x2 = distance_list[j][0]-640
-                d2 = distance_list[j][2]
-                
-                if d2 > 0:
-                    rad2 = math.atan(d2/x2)
-                
-                if 180-rad1-rad2 > 0 and rad1 != 0 and rad2 != 0:
-                    distance = (d1**2 + d2**2 - 2*d1*d2*math.cos(180-rad1-rad2))**0.5
-                
-                    print(distance)
-                    
-                    if(type(distance) is complex):
-                        print("complex")
-                    else:
-                    #diff_distance[(i+j+2)%3] = distance
-            
-                        if i==0:
-                            diff_distance[0] = min(diff_distance[0] , distance)
-                  
-                        if i == 1 or j == 1:
-                            diff_distance[1] = min(diff_distance[1], distance)
-                    
-                        if j == 2:
-                            diff_distance[2] = min(diff_distance[2], distance)
-                            
-        '''
         
         if distance_list[2][2] == 0:
             diff_distance[2] = 0
         if distance_list[1][2] == 0:
             diff_distance[1] = 0
-        if distance_list[0][2] == 0:
-            diff_distance[0] = 0
         
         
         print(diff_distance)
         
+        #print(distance_list[0][3])
         
         #TouchDesignerへ
-        '''
+        
         for i in range(0, 3):
-            
             PORT = 1100 + distance_list[i][3]
-
             # UDPのクライアントを作る
             client = udp_client.UDPClient(IP, PORT)
 
@@ -277,8 +175,7 @@ def measure_distance_osc(distance_list):
             m = msg.build()
              
             client.send(m)
-        '''
-
+            
     
     except (TypeError, NameError):
         print(TypeError)
@@ -304,27 +201,15 @@ def render_ids_3d(
     for skeleton_index in range(len(skeletons_2d)):
         skeleton_2D = skeletons_2d[skeleton_index]
         joints_2D = skeleton_2D.joints
-#        did_once = False
+        did_once = False
         
-        
-        #re_id = re_identification_realsense.re_identification(skeleton_index)
-        re_id = re_identification_realsense.re_identification(skeleton_2D.id)
-        #print(skeleton_index, "     ", re_id)
+        #reidが使えないとき
+        re_id = re_identification_realsense.re_identification(skeleton_index)
+        #reidが使えるとき
+#        re_id = re_identification_realsense.re_identification(skeleton_2D.id)
+#        print(skeleton_index, "     ", re_id)
             
         for joint_index in range(len(joints_2D)):
-            '''
-            if did_once == False:
-                cv2.putText(
-                    render_image,
-                    "id: " + str(skeleton_2D.id),
-                    (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y - 30)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.55,
-                    text_color,
-                    thickness,
-                )
-                did_once = True
-            '''
                 
             # check if the joint was detected and has valid coordinate
             if skeleton_2D.confidences[joint_index] > joint_confidence:
@@ -374,8 +259,8 @@ def render_ids_3d(
                         (int(joints_2D[joint_index].x), int(joints_2D[joint_index].y)),
                         cv2.FONT_HERSHEY_DUPLEX,
                         0.4,
-                        text_color,
-                        thickness,
+                        color=(255,0,0),
+                        thickness=2,
                     )
                     '''
                     
@@ -403,12 +288,22 @@ def render_ids_3d(
                         distance_list[skeleton_index][0] = pos_x
                         distance_list[skeleton_index][1] = pos_y
                         distance_list[skeleton_index][2] = pos_z
-                        distance_list[skeleton_index][3] = int(re_id);
-                        
+                        distance_list[skeleton_index][3] = re_id
+                
+            if did_once == False:
+                cv2.putText(
+                    color_image,
+                    "re_id: " + str(re_id),
+                    (int(joints_2D[0].x), int(joints_2D[0].y - 30)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.55,
+                    color=(0,225,0),
+                    thickness=2,
+                )
+                did_once = True
+                
     show_color_osc(distance_list)
     measure_distance_osc(distance_list)
-
-
 
 # Main content begins
 if __name__ == "__main__":
@@ -470,7 +365,6 @@ if __name__ == "__main__":
             # save frame
             idx += 1
             if idx == 15:
-                #print('Ok')
                 #save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
                 #re_identification_realsense.pred_person()
                 idx = 0    
