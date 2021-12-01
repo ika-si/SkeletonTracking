@@ -123,7 +123,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
            y1 = y2
            y2 = y1
            
-        gap = 10
+        gap = 15
         if(y1-gap >= 0):
             y1 = y1 - gap
         if(y2+gap <= 720):

@@ -203,15 +203,16 @@ class ClassBlock(nn.Module):
 #if __name__ == '__main__':
     
     
-model_pred = 0
-class_names = 0
-loader = 0
+model_pred = None
+class_names = None
+loader = None
 dict_image_id = {}
+preprocess = None
     
 
 def model_load():
     
-    global model_pred, class_names, loader
+    global model_pred, class_names, loader, preprocess
     
     transform_train_list = [
         #transforms.RandomResizedCrop(size=128, scale=(0.75,1.0), ratio=(0.75,1.3333), interpolation=3), #Image.BICUBIC)
@@ -234,7 +235,7 @@ def model_load():
         'val': transforms.Compose(transform_val_list),
         }
 
-    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_Data_5_a_1029/pytorch'
+    data_dir = 'C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/3pro_gamma/pytorch'
     
     #train = ''
     
@@ -262,13 +263,22 @@ def model_load():
     y_err['val'] = []
     
     model_pred = Net()
-    device = torch.device("cuda")
-    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/ResNet50_a_1029_both/net_last.pth', map_location="cuda:0"), strict=False)
-    model_pred.to(device)
+   # device = torch.device("cuda")
+    model_pred.load_state_dict(torch.load('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/model/resnet50_5_gamma/net_last.pth'), strict=False)
+    #model_pred.to(device)
     model_pred.eval()
     
     imsize = 256
-    loader = transforms.Compose([transforms.Scale(imsize), transforms.ToTensor()])
+    loader = transforms.Compose([transforms.Resize(imsize), transforms.ToTensor()])
+    
+    preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )])
 
 def pred_person():
     
@@ -285,52 +295,48 @@ def pred_person():
         #path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData', file_name)
         
         image = Image.open(path)
+        # error
+#        image = gamma_processing(image)
         #plt.imshow(image)
         #plt.show()
         
-        #画像の前処理
-        image = Image.open(path).convert("RGB")
-        image = loader(image)
-        image = gamma_processing(image)
-        image = Variable(image, requires_grad=True)
-        inputs = image.unsqueeze(0)
-        device = 'cuda'
-        inputs = inputs.to(device)
         
+        '''
         # 推論結果出力
         outputs = model_pred(inputs)  # torch.Size([1, 2])
         _, preds = torch.max(outputs.data, 1)
         print("推論値：", outputs)
         print("入力画像の推論結果：", class_names[preds])
-    
-    #     msg = osc_message_builder.OscMessageBuilder(address="/ who %s" % i)
-    #     if(class_names[preds] == '001'):
-    #         print(class_names[preds])
-    #         msg.add_arg(0, osc_message_builder.OscMessageBuilder.ARG_TYPE_INT)
-    #         msg = msg.build()
-    #         client.send(msg)
-    #     elif(class_names[preds] == '002'):
-    #         print(class_names[preds])
-    #         msg.add_arg(1, osc_message_builder.OscMessageBuilder.ARG_TYPE_INT)
-    #         msg = msg.build()
-    #         client.send(msg)
-    #     else:
-    #         msg.add_arg(2, osc_message_builder.OscMessageBuilder.ARG_TYPE_INT)
-    #         msg = msg.build()
-    #         client.send(msg)
-        if(class_names[preds] == '001'):
+        '''
+        
+        img_t = preprocess(image)
+        batch_t = torch.unsqueeze(img_t, 0)
+        out = model_pred(batch_t)
+        _, index = torch.max(out, 1)
+        percentage = torch.nn.functional.softmax(out, dim=1)[0]*100
+        
+        '''
+        print("推論値：", percentage)
+        print("入力画像の推論結果：", class_names[index])
+        '''
+   
+        if(class_names[index] == '001'):
             id = 1
-        elif(class_names[preds] == '002'):
+        elif(class_names[index] == '002'):
             id = 2
-        elif(class_names[preds] == '003'):
+        elif(class_names[index] == '003'):
             id = 3
         
-        skeleton_id = file_name[-5]
+        target = '_'
+        idx = file_name.find(target)
+        s = file_name[idx+1:]
+        
+        skeleton_id = s.replace('.png', '')
         dict_image_id[skeleton_id] = id
         
-        print()
-        
-        re_id_list.append(class_names[preds])
+        print(skeleton_id)
+    
+        re_id_list.append(class_names[index])
     
     print(re_id_list)
     
@@ -359,6 +365,7 @@ re_id_1 = 2
 re_id_2 = 3
 
 def re_identification(skeleton_2D_id):
+    
     #reidがうごかないとき
     if skeleton_2D_id == 0:
         return 1
@@ -368,11 +375,11 @@ def re_identification(skeleton_2D_id):
         return 3
     else:
         return 4
-    
     '''
-    if dict_image_id.setdefault(str(skeleton_id)) == None:
-        return 3
+    
+    if dict_image_id.setdefault(str(skeleton_2D_id)) == None:
+        return 0
     else:
-        return dict_image_id[str(skeleton_id)]
+        return dict_image_id[str(skeleton_2D_id)]
     '''
     

@@ -27,7 +27,7 @@ SOCIAL_DISTANCE = 200
 
 idx = 0
 
-def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jpg'):
+def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='png'):
     
     os.makedirs(dir_path, exist_ok=True)
     base_path = os.path.join(dir_path, basename)
@@ -71,7 +71,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='jp
                 h, w = save_image.shape[:2]
                 height = round(h * (50 / w))
                 resize_image = cv2.resize(save_image, dsize=(50, height))
-            
+                resize_image = re_identification_realsense.gamma_processing(resize_image)
                 cv2.imwrite('{}_{}.{}'.format(base_path, person_id, ext), resize_image)
                 print("---------------- save picture ------------------")
             except Exception as ex:
@@ -156,7 +156,7 @@ def measure_distance_osc(distance_list):
             diff_distance[1] = 0
         
         
-        print(diff_distance)
+        #print(diff_distance)
         
         #print(distance_list[0][3])
         
@@ -279,12 +279,7 @@ def render_ids_3d(
                                 )
                         
 #                        print(pos_x, "       ", pos_z)
-                        
-                        '''
-                        distance_list[int(re_id)][0] = pos_x
-                        distance_list[int(re_id)][1] = pos_y
-                        distance_list[int(re_id)][2] = pos_z
-                        '''
+
                         distance_list[skeleton_index][0] = pos_x
                         distance_list[skeleton_index][1] = pos_y
                         distance_list[skeleton_index][2] = pos_z
@@ -293,10 +288,10 @@ def render_ids_3d(
             if did_once == False:
                 cv2.putText(
                     color_image,
-                    "re_id: " + str(re_id),
+                    "id:" + str(re_id),
                     (int(joints_2D[0].x), int(joints_2D[0].y - 30)),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.55,
+                    2,
                     color=(0,225,0),
                     thickness=2,
                 )
@@ -338,7 +333,7 @@ if __name__ == "__main__":
         #cv2.resizeWindow(window_name, 1600, 900)
         
         #REIDを呼び出す
-        #re_identification_realsense.model_load()
+#        re_identification_realsense.model_load()
 
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
@@ -352,20 +347,21 @@ if __name__ == "__main__":
             # Convert images to numpy arrays
             depth_image = np.asanyarray(depth.get_data())
             color_image = np.asanyarray(color.get_data())
+            
 
             # perform inference and update the tracking id
             skeletons = skeletrack.track_skeletons(color_image)
 
             # render the skeletons on top of the acquired image and display it
             color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-            cm.render_result(skeletons, color_image, joint_confidence)
+#            cm.render_result(skeletons, color_image, joint_confidence)
             render_ids_3d(
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )
             # save frame
             idx += 1
-            if idx == 15:
-                #save_frame_camera_key(color_image, 'data/temp', "camera_capture", skeletons)
+            if idx == 30:
+                #save_frame_camera_key(color_image, 'data/temp', "capture", skeletons)
                 #re_identification_realsense.pred_person()
                 idx = 0    
             
