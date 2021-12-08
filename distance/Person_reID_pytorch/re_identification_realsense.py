@@ -376,7 +376,6 @@ def re_identification(skeleton_2D_id):
     else:
         return 4
     '''
-    
     if dict_image_id.setdefault(str(skeleton_2D_id)) == None:
         return 0
     else:
