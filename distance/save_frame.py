@@ -17,7 +17,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='pn
         joints_2D = skeleton_2D.joints
         
         y1 = int(joints_2D[1].y)
-        y2 = int(joints_2D[10].y)
+        y2 = int(joints_2D[9].y)
         x1 = int(joints_2D[2].x)
         x2 = int(joints_2D[5].x)
     
@@ -54,6 +54,13 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='pn
                 resize_image = re_identification_realsense.gamma_processing(resize_image)
                 frame_list[skeleton_index] = resize_image
                 print("---------------- save picture ------------------")
-                print(frame_list)
+                #print(frame_list)
+                
             except Exception as ex:
-                print("imwrite error")
+#                print('Exception occured: "{}"'.format(ex))
+                print("---------------- error ------------------")
+
+                
+                
+                
+                

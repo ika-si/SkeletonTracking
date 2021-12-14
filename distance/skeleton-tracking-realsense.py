@@ -6,21 +6,13 @@ import pyrealsense2 as rs
 import math
 import numpy as np
 from skeletontracker import skeletontracker
-from pythonosc import udp_client
-
-from pythonosc.osc_message_builder import OscMessageBuilder
 
 from Person_reID_pytorch import re_identification_realsense
 import calibration
 import measure_distance
 import save_frame
+import open_sound_protcol
 
-#最大人数
-Human_Number = 5
-
-#IP = '192.168.0.24'
-#大学
-IP = '172.20.61.72'
 
 n = 0
 
@@ -37,16 +29,19 @@ def render_ids_3d(
     distance_kernel_size = 10
     
     pos_list = [[0 for j in range(3)] for i in range(len(skeletons_2d))]
+    reid_list = [0 for j in range(len(skeletons_2d))]
+    
     pos_x = 0
     pos_y = 0
     pos_z = 0
-    
-           
+            
     # calculate 3D keypoints and display them
     for skeleton_index in range(len(skeletons_2d)):
         skeleton_2D = skeletons_2d[skeleton_index]
         joints_2D = skeleton_2D.joints
         did_once = False
+        
+        reid_list[skeleton_index] = re_identification_realsense.re_identification(skeleton_index)
             
         for joint_index in range(len(joints_2D)):
                 
@@ -122,7 +117,7 @@ def render_ids_3d(
                         pos_list[skeleton_index][0] = pos_x
                         pos_list[skeleton_index][1] = pos_y
                         pos_list[skeleton_index][2] = pos_z
-                
+
             if did_once == False:
                 cv2.putText(
                     color_image,
@@ -139,8 +134,9 @@ def render_ids_3d(
     print()
     '''
     calibration_pos_list = calibration.calibration_pos(pos_list)
-#    show_color_osc(distance_list)
+    open_sound_protcol.show_color_osc(calibration_pos_list, reid_list)
     distance_list = measure_distance.measure_diff(calibration_pos_list)
+    open_sound_protcol.change_particles(distance_list, reid_list)
 
 # Main content begins
 if __name__ == "__main__":

@@ -360,10 +360,6 @@ def gamma_processing(input_image):
     return filter_out_b
 
 
-re_id_0 = 1
-re_id_1 = 2
-re_id_2 = 3
-
 def re_identification(skeleton_2D_id):
     
     #reidがうごかないとき
