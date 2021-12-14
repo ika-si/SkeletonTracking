@@ -15,6 +15,7 @@ from PIL import Image
 import time
 import os
 import cv2
+import numpy as np
 
 from torch.nn import init
 from torchvision import models
@@ -315,7 +316,7 @@ def pred_person(frame_list):
         if type(frame_list[i]) == int:
             continue
         
-        image = transforms.Compose([frame_list[i].ToTensor()])
+        image = Image.fromarray(np.uint8(frame_list[i]))
         img_t = preprocess(image)
         batch_t = torch.unsqueeze(img_t, 0)
         out = model_pred(batch_t)

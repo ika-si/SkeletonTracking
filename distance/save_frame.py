@@ -52,6 +52,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='pn
                 height = round(h * (50 / w))
                 resize_image = cv2.resize(save_image, dsize=(50, height))
                 resize_image = re_identification_realsense.gamma_processing(resize_image)
+                print(type(resize_image))
                 frame_list[skeleton_index] = resize_image
                 print("---------------- save picture ------------------")
                 #print(frame_list)
