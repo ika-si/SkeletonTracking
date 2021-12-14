@@ -14,10 +14,6 @@ import save_frame
 import open_sound_protcol
 
 
-n = 0
-
-idx = 0
-
 def render_ids_3d(
     render_image, skeletons_2d, depth_map, depth_intrinsic, joint_confidence
 ):
@@ -141,6 +137,10 @@ def render_ids_3d(
 # Main content begins
 if __name__ == "__main__":
     try:
+        
+        idx = 0
+        n = 0
+        
         # Configure depth and color streams of the intel realsense
         config = rs.config()
         config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
@@ -166,7 +166,10 @@ if __name__ == "__main__":
         # Create window for initialisation
         window_name = "cubemos skeleton tracking with realsense D400 series"
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL + cv2.WINDOW_KEEPRATIO)
-
+        
+        #REIDを呼び出す
+        re_identification_realsense.model_load()
+        
         while True:
             # Create a pipeline object. This object configures the streaming camera and owns it's handle
             unaligned_frames = pipeline.wait_for_frames()
@@ -194,8 +197,9 @@ if __name__ == "__main__":
             # save frame
             idx += 1
             if idx == 30:
-                save_frame.save_frame_camera_key(color_image, 'data/temp', "capture", skeletons)
-                #re_identification_realsense.pred_person()
+                frame_list = save_frame.save_frame_camera_key(color_image, 'data/temp', "capture", skeletons)
+                #print(frame_list)
+                re_identification_realsense.pred_person(frame_list)
                 idx = 0    
 
             

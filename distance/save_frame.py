@@ -3,7 +3,7 @@ import cv2
 from Person_reID_pytorch import re_identification_realsense
 
 #画像格納
-frame_list = [0 for j in range(200)]
+frame_list = [0 for j in range(30)]
 
 def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='png'):
     
@@ -17,7 +17,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='pn
         joints_2D = skeleton_2D.joints
         
         y1 = int(joints_2D[1].y)
-        y2 = int(joints_2D[9].y)
+        y2 = int(joints_2D[10].y)
         x1 = int(joints_2D[2].x)
         x2 = int(joints_2D[5].x)
     
@@ -60,7 +60,7 @@ def save_frame_camera_key(color_image, dir_path, basename, skeletons_2d, ext='pn
 #                print('Exception occured: "{}"'.format(ex))
                 print("---------------- error ------------------")
 
-                
+    return frame_list
                 
                 
                 

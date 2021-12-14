@@ -280,21 +280,21 @@ def model_load():
         std=[0.229, 0.224, 0.225]
     )])
 
-def pred_person():
+def pred_person(frame_list):
     
     global dict_image_id
     
-    files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp')
+#    files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp')
     #files = os.listdir('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData')
     
     id = 0
     re_id_list = []
-    for file_name in files:
-        print(file_name)
-        path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp', file_name)
+    for i in range(len(frame_list)):
+#        print(file_name)
+#        path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/data/temp', file_name)
         #path = os.path.join('C:/Users/sugimura/workspace/SkeletonTracking/src/Person_reID_pytorch/testData', file_name)
         
-        image = Image.open(path)
+#        image = Image.open(path)
         # error
 #        image = gamma_processing(image)
         #plt.imshow(image)
@@ -308,7 +308,14 @@ def pred_person():
         print("推論値：", outputs)
         print("入力画像の推論結果：", class_names[preds])
         '''
+        '''
+        if (frame_list[i] == 0).all():
+            continue
+        '''
+        if type(frame_list[i]) == int:
+            continue
         
+        image = transforms.Compose([frame_list[i].ToTensor()])
         img_t = preprocess(image)
         batch_t = torch.unsqueeze(img_t, 0)
         out = model_pred(batch_t)
@@ -327,14 +334,7 @@ def pred_person():
         elif(class_names[index] == '003'):
             id = 3
         
-        target = '_'
-        idx = file_name.find(target)
-        s = file_name[idx+1:]
-        
-        skeleton_id = s.replace('.png', '')
-        dict_image_id[skeleton_id] = id
-        
-        print(skeleton_id)
+        dict_image_id[i] = id
     
         re_id_list.append(class_names[index])
     
@@ -361,7 +361,7 @@ def gamma_processing(input_image):
 
 
 def re_identification(skeleton_2D_id):
-    
+    '''
     #reidがうごかないとき
     if skeleton_2D_id == 0:
         return 1
@@ -376,5 +376,5 @@ def re_identification(skeleton_2D_id):
         return 0
     else:
         return dict_image_id[str(skeleton_2D_id)]
-    '''
+
     

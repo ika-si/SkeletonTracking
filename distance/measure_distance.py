@@ -25,7 +25,6 @@ def measure_diff(coord_set):
                 distance_list[j] = min(distance_list[j], diff[j-i-1])
 #               print(j-i-1)
 #               print(distance_list)
-        
             
             min_diff = min(diff)
             distance_list[i] = min(distance_list[i], min_diff)

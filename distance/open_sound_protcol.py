@@ -34,7 +34,7 @@ def change_particles(distance_list, reid_list):
             msg = OscMessageBuilder(address='/dis')
             
             msg.add_arg(distance_list[i])
-            print(distance_list[i])
+
             m = msg.build()
              
             client.send(m)
