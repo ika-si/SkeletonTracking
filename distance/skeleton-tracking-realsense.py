@@ -38,7 +38,7 @@ def render_ids_3d(
         did_once = False
         
         reid_list[skeleton_index] = re_identification_realsense.re_identification(skeleton_index)
-            
+        
         for joint_index in range(len(joints_2D)):
                 
             # check if the joint was detected and has valid coordinate
@@ -130,7 +130,7 @@ def render_ids_3d(
     print()
     '''
     calibration_pos_list = calibration.calibration_pos(pos_list)
-    open_sound_protcol.show_color_osc(calibration_pos_list, reid_list)
+    open_sound_protcol.show_color_osc(pos_list, reid_list)
     distance_list = measure_distance.measure_diff(calibration_pos_list)
     open_sound_protcol.change_particles(distance_list, reid_list)
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
             # render the skeletons on top of the acquired image and display it
             color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-            cm.render_result(skeletons, color_image, joint_confidence)
+#            cm.render_result(skeletons, color_image, joint_confidence)
             render_ids_3d(
                 color_image, skeletons, depth, depth_intrinsic, joint_confidence
             )

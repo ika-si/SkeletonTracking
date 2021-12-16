@@ -1,9 +1,9 @@
 from pythonosc import udp_client
 from pythonosc.osc_message_builder import OscMessageBuilder
 
-#IP = '192.168.0.24'
+IP = '192.168.0.24'
 #大学
-IP = '172.20.61.72'
+#IP = '172.19.13.215'
 
 def show_color_osc(pos_list, reid_list):
     

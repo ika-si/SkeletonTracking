@@ -33,7 +33,7 @@ def measure_diff(coord_set):
             if coord_set[i][0] == 0 and coord_set[i][2] == 0:
                 distance_list[i] = 0
                 
-#        print(distance_list)
+        print(distance_list)
         
         return distance_list
     

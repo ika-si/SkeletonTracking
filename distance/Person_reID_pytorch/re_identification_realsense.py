@@ -339,7 +339,7 @@ def pred_person(frame_list):
     
         re_id_list.append(class_names[index])
     
-    print(re_id_list)
+#    print(re_id_list)
     
     
 def gamma_processing(input_image):
@@ -362,7 +362,7 @@ def gamma_processing(input_image):
 
 
 def re_identification(skeleton_2D_id):
-    '''
+
     #reidがうごかないとき
     if skeleton_2D_id == 0:
         return 1
@@ -377,5 +377,6 @@ def re_identification(skeleton_2D_id):
         return 0
     else:
         return dict_image_id[str(skeleton_2D_id)]
+    '''
 
     
